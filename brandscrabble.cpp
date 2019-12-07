@@ -6,7 +6,26 @@ BrandScrabble::BrandScrabble(QWidget *parent) :
     ui(new Ui::BrandScrabble)
 {
     ui->setupUi(this);
-    QString cname = "ferrari";
+    QDir dir("images/");
+    dir.setFilter(QDir::Files | QDir::NoSymLinks);
+    //dir.setSorting(QDir::Size | QDir::Reversed);
+
+    QFileInfoList list = dir.entryInfoList();
+    for (int i = 0; i < list.size(); ++i) {
+        QFileInfo fileInfo = list.at(i);
+        availableFiles += fileInfo.completeBaseName();
+    }
+    on_PB_next_clicked();
+}
+
+BrandScrabble::~BrandScrabble()
+{
+    delete ui;
+}
+
+void BrandScrabble::createScrabble(QString brandname)
+{
+    QString cname = brandname;
     QList<int> lstNum;
     while(lstNum.count() < cname.length())
     {
@@ -26,11 +45,7 @@ BrandScrabble::BrandScrabble(QWidget *parent) :
         box->insertWidget(-1, pb);
     }
     ui->WD_options->setLayout(box);
-}
-
-BrandScrabble::~BrandScrabble()
-{
-    delete ui;
+    ui->label_2->setPixmap(QPixmap("images/"+brandname+".png"));
 }
 
 void BrandScrabble::optionClicked()
@@ -62,6 +77,7 @@ void BrandScrabble::on_PB_close_clicked()
 void BrandScrabble::on_PB_reset_clicked()
 {
     ui->label->clear();
+    ui->label_2->clear();
     QList<QObject*> lst = ui->WD_options->children();
     for (int i = 0; i < lst.size(); ++i)
     {
@@ -71,4 +87,37 @@ void BrandScrabble::on_PB_reset_clicked()
             pb->setDisabled(false);
         }
     }
+}
+
+void BrandScrabble::on_PB_next_clicked()
+{
+    ui->label_2->clear();
+    ui->label->clear();
+    QList<QObject*> lst = ui->WD_options->children();
+    for (int i = 0; i < lst.size(); ++i)
+    {
+        delete lst.at(i);
+    }
+    QString filename = getFilename();
+    if(!filename.isEmpty())
+        createScrabble(filename);
+    else
+        qDebug() << "No data";
+
+}
+
+QString BrandScrabble::getFilename()
+{
+    int num = randomIndex(availableFiles.count());
+    if(usedFiles.indexOf(availableFiles.at(num))==-1)
+    {
+        usedFiles += availableFiles.at(num);
+        return availableFiles.at(num);
+    }
+    else
+    {
+        if(usedFiles.count() != availableFiles.count())
+            getFilename();
+    }
+    return QString();
 }
